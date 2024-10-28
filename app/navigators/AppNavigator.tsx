@@ -14,6 +14,7 @@ import { useAppTheme, useThemeProvider } from "@/utils/useAppTheme"
 import { LoginScreen } from "@/screens/LoginScreen"
 import { useAppStore, useAuthenticationStore } from "@/store/RootStore"
 import { supabase } from "@/utils/supabase"
+import PhotoUploadScreen from "@/screens/PhotoUploadScreen"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -31,6 +32,7 @@ import { supabase } from "@/utils/supabase"
 export type AppStackParamList = {
   Welcome: undefined
   Login: undefined
+  PhotoUploadScreen: undefined
   // 🔥 Your screens go here
   // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
@@ -72,6 +74,9 @@ const AppStack = () => {
   useEffect(() => {
     setupSupaBase()
   }, [])
+  useEffect(() => {
+    console.log({ hasPreferences })
+  }, [hasPreferences])
 
   return (
     <Stack.Navigator
@@ -86,7 +91,7 @@ const AppStack = () => {
       {!isAuthenticated ? (
         <Stack.Screen name="Login" component={LoginScreen} />
       ) : hasPreferences ? (
-        <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
+        <Stack.Screen name="PhotoUploadScreen" component={PhotoUploadScreen} />
       ) : (
         <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
       )}

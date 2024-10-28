@@ -34,7 +34,6 @@ export const WelcomeScreen = () => {
 
   // Generate languages dynamically
   const languages = ["English", "Spanish", "French", "Japanese", "German", "Italian"].sort()
-  const userId = 1
   const theme = useTheme()
   const [selectedGenres, setSelectedGenres] = useState([])
   const [selectedLanguages, setSelectedLanguages] = useState([])
