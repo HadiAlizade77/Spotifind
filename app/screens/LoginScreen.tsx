@@ -5,9 +5,13 @@ import type { ThemedStyle } from "@/theme"
 import { useAppTheme } from "@/utils/useAppTheme"
 import { supabase } from "@/utils/supabase"
 import * as Linking from "expo-linking"
+import { authenticationStoreSelector } from "@/store/AuthenticationStore"
+import { useAuthenticationStore } from "@/store/RootStore"
 
 
-export const LoginScreen = (_props) => {
+export const LoginScreen = () => {
+  const authStore = useAuthenticationStore()
+
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [attemptsCount, setAttemptsCount] = useState(0)
 
@@ -23,11 +27,16 @@ export const LoginScreen = (_props) => {
       const fixQP = url.replace("signin#access_token", "signin?access_token")
       const { queryParams } = Linking.parse(fixQP)
 
-      if (queryParams?.refresh_token && queryParams?.access_token)
+      if (queryParams?.refresh_token && queryParams?.access_token) {
+        authStore.setAuthToken(queryParams?.access_token)
         await supabase.auth.setSession({
           access_token: queryParams?.access_token as unknown as string,
           refresh_token: queryParams?.refresh_token as unknown as string,
         })
+        await supabase.auth.getUser().then((user) => {
+          authStore.setUser(user?.data?.user ?? undefined)
+        })
+      }
       console.log({ url })
     }
   }

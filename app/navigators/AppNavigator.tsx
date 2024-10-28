@@ -1,4 +1,4 @@
-import { ComponentProps, useContext } from "react"
+import { ComponentProps, useContext, useEffect } from "react"
 /**
  * The app navigator (formerly "AppNavigator" and "MainNavigator") is used for the primary
  * navigation flows of your app.
@@ -11,8 +11,9 @@ import * as Screens from "@/screens"
 import Config from "../config"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { useAppTheme, useThemeProvider } from "@/utils/useAppTheme"
-import authContext from "@/contexts/auth.context"
 import { LoginScreen } from "@/screens/LoginScreen"
+import { useAuthenticationStore } from "@/store/RootStore"
+import { supabase } from "@/utils/supabase"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -52,7 +53,26 @@ const AppStack = () => {
   const {
     theme: { colors },
   } = useAppTheme()
-  const authState = useContext(authContext)
+  const { authToken, setAuthState, authRefreshToken, isAuthenticated } = useAuthenticationStore()
+
+  const setupSupaBase = async () => {
+    if (authToken && authRefreshToken)
+      await supabase.auth
+        .setSession({
+          access_token: authToken,
+          refresh_token: authRefreshToken,
+        })
+        .then(async () => {
+          await supabase.auth.onAuthStateChange((event, session) => {
+            setAuthState(event)
+            console.log(session)
+          })
+        })
+  }
+  useEffect(() => {
+    setupSupaBase()
+  }, [])
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -63,9 +83,8 @@ const AppStack = () => {
         },
       }}
     >
-      {authState !== "SIGNED_IN" ? (
+      {!isAuthenticated ? (
         <Stack.Screen name="Login" component={LoginScreen} />
-
       ) : (
         <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
       )}

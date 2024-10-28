@@ -33,9 +33,6 @@ import Config from "./config"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { loadDateFnsLocale } from "./utils/formatDate"
 import { PaperProvider } from "react-native-paper"
-import AuthContext from "./contexts/auth.context"
-import { AuthChangeEvent } from "@supabase/supabase-js"
-import { supabase } from "./utils/supabase"
 import { useStore } from "./store/RootStore"
 
 export const NAVIGATION_PERSISTENCE_KEY = "NAVIGATION_STATE"
@@ -80,17 +77,7 @@ function App(props: AppProps) {
 
   const [areFontsLoaded, fontLoadError] = useFonts(customFontsToLoad)
   const [isI18nInitialized, setIsI18nInitialized] = useState(false)
-  const [authState, setAuthState] = useState<AuthChangeEvent | null>(null)
 
-  const setupSupaBase = async () => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      setAuthState(event)
-      console.log(session)
-    })
-  }
-  useEffect(() => {
-    setupSupaBase()
-  }, [])
 
   useEffect(() => {
     initI18n()
@@ -133,21 +120,19 @@ function App(props: AppProps) {
 
   // otherwise, we're ready to render the app
   return (
-    <AuthContext.Provider value={authState}>
-      <PaperProvider>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-          <ErrorBoundary catchErrors={Config.catchErrors}>
-            <KeyboardProvider>
-              <AppNavigator
-                linking={linking}
-                initialState={initialNavigationState}
-                onStateChange={onNavigationStateChange}
-              />
-            </KeyboardProvider>
-          </ErrorBoundary>
-        </SafeAreaProvider>
-      </PaperProvider>
-    </AuthContext.Provider>
+    <PaperProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <ErrorBoundary catchErrors={Config.catchErrors}>
+          <KeyboardProvider>
+            <AppNavigator
+              linking={linking}
+              initialState={initialNavigationState}
+              onStateChange={onNavigationStateChange}
+            />
+          </KeyboardProvider>
+        </ErrorBoundary>
+      </SafeAreaProvider>
+    </PaperProvider>
   )
 }
 
