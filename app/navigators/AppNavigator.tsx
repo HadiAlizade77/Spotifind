@@ -1,3 +1,4 @@
+import { ComponentProps, useContext } from "react"
 /**
  * The app navigator (formerly "AppNavigator" and "MainNavigator") is used for the primary
  * navigation flows of your app.
@@ -10,7 +11,8 @@ import * as Screens from "@/screens"
 import Config from "../config"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { useAppTheme, useThemeProvider } from "@/utils/useAppTheme"
-import { ComponentProps } from "react"
+import authContext from "@/contexts/auth.context"
+import { LoginScreen } from "@/screens/LoginScreen"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -27,6 +29,7 @@ import { ComponentProps } from "react"
  */
 export type AppStackParamList = {
   Welcome: undefined
+  Login: undefined
   // 🔥 Your screens go here
   // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
@@ -49,7 +52,7 @@ const AppStack = () => {
   const {
     theme: { colors },
   } = useAppTheme()
-
+  const authState = useContext(authContext)
   return (
     <Stack.Navigator
       screenOptions={{
@@ -60,14 +63,19 @@ const AppStack = () => {
         },
       }}
     >
-      <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
+      {authState !== "SIGNED_IN" ? (
+        <Stack.Screen name="Login" component={LoginScreen} />
+
+      ) : (
+        <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
+      )}
       {/** 🔥 Your screens go here */}
       {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
     </Stack.Navigator>
   )
 }
 
-export interface NavigationProps extends Partial<ComponentProps<typeof NavigationContainer>> {}
+export interface NavigationProps extends Partial<ComponentProps<typeof NavigationContainer>> { }
 
 export const AppNavigator = (props: NavigationProps) => {
   const { themeScheme, navigationTheme, setThemeContextOverride, ThemeProvider } =

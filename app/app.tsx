@@ -20,7 +20,7 @@ import "./utils/gestureHandler"
 import { initI18n } from "./i18n"
 import "./utils/ignoreWarnings"
 import { useFonts } from "expo-font"
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context"
 import * as Linking from "expo-linking"
 import { AppNavigator, useNavigationPersistence } from "./navigators"
@@ -30,6 +30,10 @@ import { customFontsToLoad } from "./theme"
 import Config from "./config"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { loadDateFnsLocale } from "./utils/formatDate"
+import { PaperProvider } from "react-native-paper"
+import AuthContext from "./contexts/auth.context"
+import { AuthChangeEvent } from "@supabase/supabase-js"
+import { supabase } from "./utils/supabase"
 
 export const NAVIGATION_PERSISTENCE_KEY = "NAVIGATION_STATE"
 
@@ -73,6 +77,19 @@ function App(props: AppProps) {
 
   const [areFontsLoaded, fontLoadError] = useFonts(customFontsToLoad)
   const [isI18nInitialized, setIsI18nInitialized] = useState(false)
+  const [authState, setAuthState] = useState<AuthChangeEvent | null>(null)
+
+
+  const setupSupaBase = async () => {
+    supabase.auth.onAuthStateChange((event, session) => {
+      setAuthState(event)
+      console.log(session)
+    })
+  }
+  useEffect(() => {
+    setupSupaBase()
+  }, [])
+
 
   useEffect(() => {
     initI18n()
@@ -80,19 +97,13 @@ function App(props: AppProps) {
       .then(() => loadDateFnsLocale())
   }, [])
 
-  
-React.useEffect(() => {
-    
-
-
+  React.useEffect(() => {
     // If your initialization scripts run very fast, it's good to show the splash screen for just a bit longer to prevent flicker.
     // Slightly delaying splash screen hiding for better UX; can be customized or removed as needed,
     // Note: (vanilla Android) The splash-screen will not appear if you launch your app via the terminal or Android Studio. Kill the app and launch it normally by tapping on the launcher icon. https://stackoverflow.com/a/69831106
     // Note: (vanilla iOS) You might notice the splash-screen logo change size. This happens in debug/development mode. Try building the app for release.
     setTimeout(hideSplashScreen, 500)
-
-    
-}, [])
+  }, [])
 
   // Before we show the app, we have to wait for our state to be ready.
   // In the meantime, don't render anything. This will be the background
@@ -100,13 +111,8 @@ React.useEffect(() => {
   // In iOS: application:didFinishLaunchingWithOptions:
   // In Android: https://stackoverflow.com/a/45838109/204044
   // You can replace with your own loading component if you wish.
-  
-if (!isNavigationStateRestored || (!areFontsLoaded && !fontLoadError)) {
-    !rehydrated ||
-    !isNavigationStateRestored ||
-    !isI18nInitialized ||
-    (!areFontsLoaded && !fontLoadError)
-  ) {
+
+  if (!isNavigationStateRestored || !isI18nInitialized || (!areFontsLoaded && !fontLoadError)) {
     return null
   }
 
@@ -117,17 +123,21 @@ if (!isNavigationStateRestored || (!areFontsLoaded && !fontLoadError)) {
 
   // otherwise, we're ready to render the app
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <ErrorBoundary catchErrors={Config.catchErrors}>
-        <KeyboardProvider>
-          <AppNavigator
-            linking={linking}
-            initialState={initialNavigationState}
-            onStateChange={onNavigationStateChange}
-          />
-        </KeyboardProvider>
-      </ErrorBoundary>
-    </SafeAreaProvider>
+    <AuthContext.Provider value={authState}>
+      <PaperProvider>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+          <ErrorBoundary catchErrors={Config.catchErrors}>
+            <KeyboardProvider>
+              <AppNavigator
+                linking={linking}
+                initialState={initialNavigationState}
+                onStateChange={onNavigationStateChange}
+              />
+            </KeyboardProvider>
+          </ErrorBoundary>
+        </SafeAreaProvider>
+      </PaperProvider>
+    </AuthContext.Provider>
   )
 }
 
