@@ -7,11 +7,10 @@ import {
   authenticationStoreSelector,
   createAuthenticationSlice,
 } from "./AuthenticationStore"
-// import { EpisodeStore, createEpisodeSlice, episodeStoreSelector } from "./EpisodeStore"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { AppStore, appStoreSelector, createAppSlice } from "./AppStore"
 
-// export interface RootStore extends AuthenticationStore, EpisodeStore {
-export interface RootStore extends AuthenticationStore {
+export interface RootStore extends AuthenticationStore, AppStore {
   _hasHydrated: boolean
   setHasHydrated: (state: boolean) => void
 }
@@ -20,7 +19,7 @@ export const useStore = create<RootStore>()(
   persist(
     (...a) => ({
       ...createAuthenticationSlice(...a),
-      // ...createEpisodeSlice(...a),
+      ...createAppSlice(...a),
       // add your state slices here
 
       _hasHydrated: false,
@@ -42,4 +41,4 @@ export const useStore = create<RootStore>()(
 )
 
 export const useAuthenticationStore = () => useStore(useShallow(authenticationStoreSelector))
-// export const useEpisodeStore = () => useStore(useShallow(episodeStoreSelector))
+export const useAppStore = () => useStore(useShallow(appStoreSelector))

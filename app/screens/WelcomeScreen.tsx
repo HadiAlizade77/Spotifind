@@ -2,17 +2,11 @@ import { useEffect, useState } from "react"
 import { View, ScrollView, StyleSheet } from "react-native"
 import { Chip, Text, Button, useTheme } from "react-native-paper"
 import { supabase } from "@/utils/supabase"
+import { useAppStore, useAuthenticationStore } from "@/store/RootStore"
 
 export const WelcomeScreen = () => {
-  const getUser = async () => {
-    const user = await supabase.auth.getUser()
-    // Fetch user data
-    console.log(user)
-  }
-  useEffect(() => {
-    getUser()
-  }, [])
-
+  const authStore = useAuthenticationStore()
+  const appStore = useAppStore()
 
   // List of music genres
   const musicGenres = [
@@ -61,13 +55,25 @@ export const WelcomeScreen = () => {
 
   // Save preferences to Supabase
   const savePreferences = async () => {
-    const { data, error } = await supabase.from("preferences").upsert({
-      user_id: userId,
-      genres: selectedGenres,
-      languages: selectedLanguages,
-    })
-    if (error) console.error("Error saving preferences:", error)
-    else alert("Preferences saved successfully!")
+    console.log(JSON.stringify(authStore.user, null, 2))
+    await supabase
+      .from("profile_preferences")
+      .upsert({
+        profile_id: authStore.user?.id,
+        genres: selectedGenres,
+        languages: selectedLanguages,
+      })
+      .then(async ({ data, error }) => {
+        if (error) {
+          console.log(error, "error in savePreferences")
+        }
+        console.log(data)
+        await appStore.setHasPreferences(true)
+        return data
+      })
+      .then(() => {
+        alert("Preferences saved successfully!")
+      })
   }
 
   return (
@@ -82,10 +88,7 @@ export const WelcomeScreen = () => {
           <Chip
             key={genre}
             style={[styles.chip, selectedGenres.includes(genre) && styles.chipSelected]}
-            textStyle={[
-              styles.chipText,
-              selectedGenres.includes(genre) && styles.chipTextSelected,
-            ]}
+            textStyle={[styles.chipText, selectedGenres.includes(genre) && styles.chipTextSelected]}
             onPress={() => toggleGenre(genre)}
           >
             {genre}

@@ -12,7 +12,7 @@ import Config from "../config"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { useAppTheme, useThemeProvider } from "@/utils/useAppTheme"
 import { LoginScreen } from "@/screens/LoginScreen"
-import { useAuthenticationStore } from "@/store/RootStore"
+import { useAppStore, useAuthenticationStore } from "@/store/RootStore"
 import { supabase } from "@/utils/supabase"
 
 /**
@@ -54,7 +54,7 @@ const AppStack = () => {
     theme: { colors },
   } = useAppTheme()
   const { authToken, setAuthState, authRefreshToken, isAuthenticated } = useAuthenticationStore()
-
+  const { hasPreferences } = useAppStore()
   const setupSupaBase = async () => {
     if (authToken && authRefreshToken)
       await supabase.auth
@@ -85,6 +85,8 @@ const AppStack = () => {
     >
       {!isAuthenticated ? (
         <Stack.Screen name="Login" component={LoginScreen} />
+      ) : hasPreferences ? (
+        <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
       ) : (
         <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
       )}
