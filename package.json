@@ -33,9 +33,11 @@
   "dependencies": {
     "@expo-google-fonts/space-grotesk": "^0.2.2",
     "@expo/metro-runtime": "~3.2.1",
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-navigation/native": "^6.0.2",
     "@react-navigation/native-stack": "^6.0.2",
     "@shopify/flash-list": "1.6.4",
+    "@supabase/supabase-js": "^2.45.6",
     "apisauce": "3.0.1",
     "date-fns": "^4.1.0",
     "expo": "~51.0.8",
@@ -56,15 +58,14 @@
     "react-native-gesture-handler": "~2.16.1",
     "react-native-keyboard-controller": "^1.12.7",
     "react-native-mmkv": "^2.12.2",
-    "react-native-reanimated": "~3.10.1",
-    "@react-native-async-storage/async-storage": "1.23.1",
-    "@supabase/supabase-js": "^2.45.6",
     "react-native-paper": "^5.12.5",
+    "react-native-reanimated": "~3.10.1",
     "react-native-safe-area-context": "^4.12.0",
     "react-native-screens": "3.31.1",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-vector-icons": "^10.2.0",
-    "react-native-web": "~0.19.6"
+    "react-native-web": "~0.19.6",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

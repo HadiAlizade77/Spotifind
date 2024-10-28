@@ -8,8 +8,11 @@
  * what is going on here.
  *
  * The app navigation resides in ./app/navigators, so head over there
- * if you're interested in adding screens and navigators.
+ * if you're interested in adding screens and navigators. * The app navigation resides in ./app/navigators, so head over there
+
  */
+import { useEffect, useState } from "react"
+
 if (__DEV__) {
   // Load Reactotron in development only.
   // Note that you must be using metro's `inlineRequires` for this to work.
@@ -20,7 +23,6 @@ import "./utils/gestureHandler"
 import { initI18n } from "./i18n"
 import "./utils/ignoreWarnings"
 import { useFonts } from "expo-font"
-import React, { useEffect, useState } from "react"
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context"
 import * as Linking from "expo-linking"
 import { AppNavigator, useNavigationPersistence } from "./navigators"
@@ -34,6 +36,7 @@ import { PaperProvider } from "react-native-paper"
 import AuthContext from "./contexts/auth.context"
 import { AuthChangeEvent } from "@supabase/supabase-js"
 import { supabase } from "./utils/supabase"
+import { useStore } from "./store/RootStore"
 
 export const NAVIGATION_PERSISTENCE_KEY = "NAVIGATION_STATE"
 
@@ -79,7 +82,6 @@ function App(props: AppProps) {
   const [isI18nInitialized, setIsI18nInitialized] = useState(false)
   const [authState, setAuthState] = useState<AuthChangeEvent | null>(null)
 
-
   const setupSupaBase = async () => {
     supabase.auth.onAuthStateChange((event, session) => {
       setAuthState(event)
@@ -90,14 +92,17 @@ function App(props: AppProps) {
     setupSupaBase()
   }, [])
 
-
   useEffect(() => {
     initI18n()
       .then(() => setIsI18nInitialized(true))
       .then(() => loadDateFnsLocale())
   }, [])
+  const hasHydrated = useStore((state) => state._hasHydrated)
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (hasHydrated) {
+      setTimeout(hideSplashScreen, 500)
+    }
     // If your initialization scripts run very fast, it's good to show the splash screen for just a bit longer to prevent flicker.
     // Slightly delaying splash screen hiding for better UX; can be customized or removed as needed,
     // Note: (vanilla Android) The splash-screen will not appear if you launch your app via the terminal or Android Studio. Kill the app and launch it normally by tapping on the launcher icon. https://stackoverflow.com/a/69831106
@@ -112,7 +117,12 @@ function App(props: AppProps) {
   // In Android: https://stackoverflow.com/a/45838109/204044
   // You can replace with your own loading component if you wish.
 
-  if (!isNavigationStateRestored || !isI18nInitialized || (!areFontsLoaded && !fontLoadError)) {
+  if (
+    !hasHydrated ||
+    !isNavigationStateRestored ||
+    !isI18nInitialized ||
+    (!areFontsLoaded && !fontLoadError)
+  ) {
     return null
   }
 
