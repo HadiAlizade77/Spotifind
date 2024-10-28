@@ -93,45 +93,52 @@ const PhotoUploadScreen = () => {
       setLoading(false)
     }
   }
+  const { oauthToken, logout } = useAuthenticationStore()
   const fakeIt = async () => {
-    const data = await supabase.auth.getSession()
-    console.log(data)
-    await axios
-      .get("https://kaifqnazdtdjcoiwgxgq.supabase.co/functions/v1/spotifind", {
+    const { data: songsData } = await axios.get(
+      "https://kaifqnazdtdjcoiwgxgq.supabase.co/functions/v1/spotifind",
+      {
         headers: {
-          Authorization: `Bearer ${data.data.session.access_token}`,
+          Authorization: `Bearer ${authStore.authToken}`,
         },
-      })
-      .then(async ({ data }) => {
-        console.log(JSON.stringify(data, null, 4))
-        await Promise.all(
-          [data.data[0]].map(async (item) => {
-            await axios
-              .get(
-                `https://api.spotify.com/v1/search?q=artist:${item.artis} track:${item.song}&type=track`,
-              )
-              .then(({ data }) => {
-                console.log(data, "+++++++++++++++++")
-                const mapTrackData = (trackData) => {
-                  const track = trackData.tracks.items[0] // Access the first track
-                  return {
-                    name: track.name,
-                    image: track.album.images[0].url, // Choose the first image URL
-                    artist: track.artists.map((artist) => artist.name).join(", "), // Join multiple artists' names
-                    spotifyLink: track.external_urls.spotify,
-                    trackId: track.id,
-                  }
-                }
+      },
+    )
 
-                const mappedData = mapTrackData(data)
-                console.log(mappedData)
-              })
-          }),
-        )
-      })
-      .catch((error) => {
-        console.log(JSON.stringify(error, null, 4))
-      })
+    console.log(JSON.stringify(songsData, null, 4))
+    await Promise.all(
+      songsData.data.map(async (item) => {
+        await axios
+          .get("https://api.spotify.com/v1/search?q=artist:" +
+            encodeURI(
+              `${item.artist}&track:${item.song}&type=track`,
+            ),
+            {
+              headers: {
+                Authorization: `Bearer ${oauthToken}`,
+              },
+            },
+          )
+          .then(({ data }) => {
+            console.log(data, "+++++++++++++++++")
+            const mapTrackData = (trackData) => {
+              const track = trackData.tracks.items[0] // Access the first track
+              return {
+                name: track.name,
+                image: track.album.images[0].url, // Choose the first image URL
+                artist: track.artists.map((artist) => artist.name).join(", "), // Join multiple artists' names
+                spotifyLink: track.external_urls.spotify,
+                trackId: track.id,
+              }
+            }
+
+            const mappedData = mapTrackData(data)
+            console.log(mappedData)
+          })
+          .catch((error) => {
+            console.log(JSON.stringify(error, null, 4))
+          })
+      }),
+    )
   }
 
   return (

@@ -8,7 +8,6 @@ import * as Linking from "expo-linking"
 import { authenticationStoreSelector } from "@/store/AuthenticationStore"
 import { useAuthenticationStore } from "@/store/RootStore"
 
-
 export const LoginScreen = () => {
   const authStore = useAuthenticationStore()
 
@@ -26,31 +25,43 @@ export const LoginScreen = () => {
     if (url) {
       const fixQP = url.replace("signin#access_token", "signin?access_token")
       const { queryParams } = Linking.parse(fixQP)
+      console.log({ queryParams })
+      await supabase.auth.exchangeCodeForSession(queryParams?.code as string)
 
-      if (queryParams?.refresh_token && queryParams?.access_token) {
-        authStore.setAuthToken(queryParams?.access_token)
-        await supabase.auth.setSession({
-          access_token: queryParams?.access_token as unknown as string,
-          refresh_token: queryParams?.refresh_token as unknown as string,
-        })
-        await supabase.auth.getUser().then((user) => {
-          authStore.setUser(user?.data?.user ?? undefined)
-        })
-      }
-      console.log({ url })
     }
   }
+  const scopes = [
+    "playlist-read-collaborative",
+    "playlist-read-private",
+    "playlist-modify-public",
+    "playlist-modify-private",
+    "user-read-email",
+    "user-read-private",
+    "user-read-playback-position",
+    "user-top-read",
+  ]
 
   useEffect(() => {
     setupSupaBaseDeepLink()
   }, [url])
-
   const handleSpotifyLogin = async () => {
     return await supabase.auth
       .signInWithOAuth({
         provider: "spotify",
+        options: {
+          redirectTo: "https://kaifqnazdtdjcoiwgxgq.supabase.co/functions/v1/spotify-login",
+          scopes: scopes.join(" "),
+          skipBrowserRedirect: true,
+        },
       })
-      .then(({ data }) => {
+      .then(({ data, ...rest }) => {
+        // eslint-disable-next-line camelcase
+        const code_challenge = new URL(data.url!).searchParams.get("code_challenge");
+        // eslint-disable-next-line camelcase
+        console.log({ code_challenge })
+
+        console.log(rest)
+        console.log(data.url)
         data?.url && Linking.openURL(data.url)
       })
   }

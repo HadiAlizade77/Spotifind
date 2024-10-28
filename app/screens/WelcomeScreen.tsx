@@ -55,10 +55,11 @@ export const WelcomeScreen = () => {
   // Save preferences to Supabase
   const savePreferences = async () => {
     console.log(JSON.stringify(authStore.user, null, 2))
+    console.log(authStore.user)
     await supabase
       .from("profile_preferences")
       .upsert({
-        profile_id: authStore.user?.id,
+        profile_id: authStore.user.id,
         genres: selectedGenres,
         languages: selectedLanguages,
       })

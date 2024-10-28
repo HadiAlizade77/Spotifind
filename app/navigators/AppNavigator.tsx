@@ -55,25 +55,56 @@ const AppStack = () => {
   const {
     theme: { colors },
   } = useAppTheme()
-  const { authToken, setAuthState, authRefreshToken, isAuthenticated } = useAuthenticationStore()
+  const {
+    authToken,
+    setUser,
+    setOAuthToken,
+    setOAuthRefreshToken,
+    logout,
+    setAuthRefreshToken,
+    setAuthToken,
+    setAuthState,
+    authRefreshToken,
+    isAuthenticated,
+  } = useAuthenticationStore()
   const { hasPreferences } = useAppStore()
   const setupSupaBase = async () => {
-    if (authToken && authRefreshToken)
+    await supabase.auth.onAuthStateChange((event, session) => {
+      setAuthState(event)
+      console.log({ event })
+      console.log(JSON.stringify(session, null, 4))
+      if (session?.refresh_token && session.access_token) {
+        setAuthRefreshToken(session?.refresh_token)
+        setAuthToken(session?.access_token)
+      }
+      if (session) {
+        setUser(session.user)
+      }
+      if (session && session.provider_token) {
+        setOAuthToken(session.provider_token)
+      }
+
+      if (session && session.provider_refresh_token) {
+        setOAuthRefreshToken(session.provider_refresh_token)
+      }
+
+      if (event === "SIGNED_OUT") {
+        logout()
+      }
+    })
+    if (authToken && authRefreshToken) {
       await supabase.auth
         .setSession({
           access_token: authToken,
           refresh_token: authRefreshToken,
         })
-        .then(async () => {
-          await supabase.auth.onAuthStateChange((event, session) => {
-            setAuthState(event)
-            console.log(session)
-          })
-        })
+
+    }
   }
   useEffect(() => {
     setupSupaBase()
   }, [])
+
   useEffect(() => {
     console.log({ hasPreferences })
   }, [hasPreferences])
